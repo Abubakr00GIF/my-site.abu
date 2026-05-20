@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Abubakr — IT School</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050a12;
+      --bg2: #0a1525;
+      --accent: #00d4ff;
+      --accent2: #7b2fff;
+      --accent3: #ff4ecd;
+      --text: #e8f4ff;
+      --muted: #5a7a9a;
+      --glass: rgba(0, 212, 255, 0.06);
+      --border: rgba(0, 212, 255, 0.15);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      width: 12px; height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s ease;
+      mix-blend-mode: screen;
+    }
+    .cursor-ring {
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      transition: all 0.18s ease;
+      opacity: 0.5;
+    }
+
+    /* Canvas background */
+    #canvas-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      opacity: 0.45;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.35;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.4rem 4rem;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      background: rgba(5, 10, 18, 0.7);
+    }
+
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1rem;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+    }
+    .logo span { color: var(--accent3); }
+
+    nav ul {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    nav a {
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+      font-family: 'Space Mono', monospace;
+    }
+    nav a:hover { color: var(--accent); }
+
+    /* SECTIONS */
+    section {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* HERO */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 0 4rem;
+      padding-top: 6rem;
+    }
+
+    .hero-inner {
+      max-width: 900px;
+    }
+
+    .hero-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 800;
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s forwards;
+    }
+
+    h1 .name-accent {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+    }
+
+    .hero-desc {
+      margin-top: 1.8rem;
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.6s forwards;
+    }
+
+    .hero-cta {
+      margin-top: 2.5rem;
+      display: flex;
+      gap: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s forwards;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 2rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: none;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 212, 255, 0.35);
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 2rem;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: border-color 0.2s, color 0.2s;
+      cursor: none;
+    }
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Scrolling ticker */
+    .ticker-wrap {
+      overflow: hidden;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 0;
+      background: var(--glass);
+      position: relative;
+      z-index: 2;
+    }
+    .ticker {
+      display: flex;
+      gap: 3rem;
+      animation: ticker 20s linear infinite;
+      white-space: nowrap;
+    }
+    .ticker-item {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .ticker-item span { color: var(--accent); margin-right: 3rem; }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ABOUT */
+    #about {
+      padding: 8rem 4rem;
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 3rem;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .about-text {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: #8aa8c8;
+    }
+    .about-text p + p { margin-top: 1.2rem; }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .skill-card {
+      padding: 1.2rem 1.4rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--glass);
+      transition: border-color 0.2s, transform 0.2s;
+      backdrop-filter: blur(10px);
+    }
+    .skill-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+    .skill-icon { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .skill-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .skill-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* SCHOOL */
+    #school {
+      padding: 8rem 4rem;
+      background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.03) 50%, transparent);
+    }
+
+    .school-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .school-card {
+      padding: 2rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--glass);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s;
+      backdrop-filter: blur(10px);
+    }
+    .school-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .school-card:hover { transform: translateY(-6px); border-color: rgba(0,212,255,0.3); }
+    .school-card:hover::before { opacity: 1; }
+
+    .card-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      margin-bottom: 1rem;
+    }
+    .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.75rem; }
+    .card-text { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+    /* VISION */
+    #vision {
+      padding: 8rem 4rem;
+    }
+
+    .vision-inner {
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .vision-quote {
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--text);
+      position: relative;
+      padding: 3rem;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+    }
+    .vision-quote::before {
+      content: '"';
+      position: absolute;
+      top: -0.5rem;
+      left: 2rem;
+      font-size: 5rem;
+      color: var(--accent);
+      opacity: 0.3;
+      line-height: 1;
+      font-family: Georgia, serif;
+    }
+
+    /* CONTACT */
+    #contact {
+      padding: 8rem 4rem;
+    }
+
+    .contact-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+    }
+
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .form-input, .form-textarea {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      cursor: none;
+    }
+    .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+    .form-textarea { resize: vertical; min-height: 120px; }
+
+    .contact-info { }
+    .contact-line {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.2rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .contact-icon {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--glass);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .contact-detail-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .contact-detail-val { font-size: 0.95rem; margin-top: 0.15rem; }
+
+    /* FOOTER */
+    footer {
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid var(--border);
+      padding: 2rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-copy {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    .footer-made {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .footer-made span { color: var(--accent3); }
+
+    /* Glow dot decorations */
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glow-1 {
+      width: 500px; height: 500px;
+      background: rgba(0, 212, 255, 0.08);
+      top: -100px; right: -100px;
+    }
+    .glow-2 {
+      width: 400px; height: 400px;
+      background: rgba(123, 47, 255, 0.07);
+      bottom: -100px; left: -100px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.9rem;
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      border-radius: 999px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0s forwards;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <canvas id="canvas-bg"></canvas>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">ABU<span>.</span>DEV</div>
+    <ul>
+      <li><a href="#about">Обо мне</a></li>
+      <li><a href="#school">IT-школа</a></li>
+      <li><a href="#vision">Миссия</a></li>
+      <li><a href="#contact">Контакт</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="glow glow-1"></div>
+    <div class="hero-inner">
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        Открыт для сотрудничества
+      </div>
+      <p class="hero-tag">// Разработчик · Педагог · Основатель</p>
+      <h1>
+        Привет, я<br>
+        <span class="name-accent">Abubakr</span>
+      </h1>
+      <p class="hero-desc">
+        Создаю будущее через технологии и образование. Строю IT-школу для детей, 
+        где каждый ребёнок откроет мир программирования.
+      </p>
+      <div class="hero-cta">
+        <a href="#school" class="btn-primary">→ Узнать об IT-школе</a>
+        <a href="#contact" class="btn-outline">Написать мне</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <span class="ticker-item"><span>✦</span> Python</span>
+      <span class="ticker-item"><span>✦</span> Web Development</span>
+      <span class="ticker-item"><span>✦</span> IT Education</span>
+      <span class="ticker-item"><span>✦</span> Computer Repair</span>
+      <span class="ticker-item"><span>✦</span> Kids Coding</span>
+      <span class="ticker-item"><span>✦</span> Future School</span>
+      <span class="ticker-item"><span>✦</span> Python</span>
+      <span class="ticker-item"><span>✦</span> Web Development</span>
+      <span class="ticker-item"><span>✦</span> IT Education</span>
+      <span class="ticker-item"><span>✦</span> Computer Repair</span>
+      <span class="ticker-item"><span>✦</span> Kids Coding</span>
+      <span class="ticker-item"><span>✦</span> Future School</span>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="glow glow-2"></div>
+    <p class="section-label reveal">// 01 — Обо мне</p>
+    <h2 class="section-title reveal">Кто я такой</h2>
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <p>
+          С детства я увлечён компьютерами — разбирал, собирал, ремонтировал. 
+          Технологии для меня не просто инструмент, это язык, на котором говорит будущее.
+        </p>
+        <p>
+          Сейчас я углублённо изучаю программирование, чтобы однажды передать эти знания детям. 
+          Я верю, что каждый ребёнок способен создавать — нужно лишь дать ему правильный старт.
+        </p>
+        <p>
+          Моя цель — открыть IT-школу, где дети будут не просто учить код, 
+          а решать настоящие задачи и воплощать собственные идеи в жизнь.
+        </p>
+      </div>
+      <div class="skills-grid reveal">
+        <div class="skill-card">
+          <div class="skill-icon">💻</div>
+          <div class="skill-name">Программирование</div>
+          <div class="skill-desc">Python, Web, алгоритмы</div>
+        </div>
+        <div class="skill-card">
+          <div class="skill-icon">🔧</div>
+          <div class="skill-name">Железо & Сети</div>
+          <div class="skill-desc">Ремонт, сборка ПК</div>
+        </div>
+        <div class="skill-card">
+          <div class="skill-icon">🎓</div>
+          <div class="skill-name">Педагогика</div>
+          <div class="skill-desc">Обучение детей IT</div>
+        </div>
+        <div class="skill-card">
+          <div class="skill-icon">🚀</div>
+          <div class="skill-name">Предпринимательство</div>
+          <div class="skill-desc">Создание IT-школы</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHOOL -->
+  <section id="school">
+    <p class="section-label reveal">// 02 — Проект</p>
+    <h2 class="section-title reveal">Моя IT-школа</h2>
+    <p class="reveal" style="color:var(--muted); max-width:560px; line-height:1.7; font-size:1rem;">
+      Я строю образовательный проект, который изменит то, как дети взаимодействуют с технологиями.
+    </p>
+    <div class="school-cards">
+      <div class="school-card reveal">
+        <p class="card-num">// 01</p>
+        <h3 class="card-title">Программирование с нуля</h3>
+        <p class="card-text">Дети изучают Python, Scratch и веб-разработку в игровом формате — через реальные проекты и задачи.</p>
+      </div>
+      <div class="school-card reveal">
+        <p class="card-num">// 02</p>
+        <h3 class="card-title">Мышление разработчика</h3>
+        <p class="card-text">Логика, алгоритмы, решение проблем — навыки, которые помогут в любой профессии.</p>
+      </div>
+      <div class="school-card reveal">
+        <p class="card-num">// 03</p>
+        <h3 class="card-title">Собственные проекты</h3>
+        <p class="card-text">Каждый ученик создаёт свой проект — игру, сайт или приложение. Реальный результат с первого занятия.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISION -->
+  <section id="vision">
+    <p class="section-label reveal" style="text-align:center;">// 03 — Миссия</p>
+    <h2 class="section-title reveal" style="text-align:center;">Зачем это всё</h2>
+    <div class="vision-inner reveal">
+      <div class="vision-quote">
+        Я хочу создать место, где дети видят компьютер не как инструмент развлечения, 
+        а как инструмент <span style="color:var(--accent)">созидания</span>. 
+        Место, где рождаются будущие инженеры, создатели и лидеры цифрового мира.
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <p class="section-label reveal">// 04 — Контакт</p>
+    <h2 class="section-title reveal">Напишите мне</h2>
+    <div class="contact-inner">
+      <div class="contact-form reveal">
+        <div class="form-group">
+          <label class="form-label">Ваше имя</label>
+          <input class="form-input" type="text" placeholder="Иван Иванов" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" placeholder="ivan@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Сообщение</label>
+          <textarea class="form-textarea" placeholder="Расскажите о вашем вопросе..."></textarea>
+        </div>
+        <button class="btn-primary" style="border:none; cursor:none;" onclick="alert('Сообщение отправлено! 🚀')">
+          → Отправить сообщение
+        </button>
+      </div>
+      <div class="contact-info reveal">
+        <div class="contact-line">
+          <div class="contact-icon">📍</div>
+          <div>
+            <div class="contact-detail-label">Местоположение</div>
+            <div class="contact-detail-val">Готов работать онлайн и офлайн</div>
+          </div>
+        </div>
+        <div class="contact-line">
+          <div class="contact-icon">🎯</div>
+          <div>
+            <div class="contact-detail-label">Цель</div>
+            <div class="contact-detail-val">Открытие IT-школы для детей</div>
+          </div>
+        </div>
+        <div class="contact-line">
+          <div class="contact-icon">💡</div>
+          <div>
+            <div class="contact-detail-label">Ищу</div>
+            <div class="contact-detail-val">Партнёров, инвесторов, единомышленников</div>
+          </div>
+        </div>
+        <div class="contact-line">
+          <div class="contact-icon">⚡</div>
+          <div>
+            <div class="contact-detail-label">Статус</div>
+            <div class="contact-detail-val" style="color:var(--accent);">Активно развиваю проект</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-copy">© 2026 Abubakr. Все права защищены.</div>
+    <div class="footer-made">Сделано с <span>♥</span> и кодом</div>
+  </footer>
+
+  <script>
+    // Custom cursor
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.left = mx - 6 + 'px';
+      cursor.style.top = my - 6 + 'px';
+    });
+
+    function animRing() {
+      rx += (mx - rx) * 0.12;
+      ry += (my - ry) * 0.12;
+      ring.style.left = rx - 18 + 'px';
+      ring.style.top = ry - 18 + 'px';
+      requestAnimationFrame(animRing);
+    }
+    animRing();
+
+    document.querySelectorAll('a, button, .skill-card, .school-card').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.style.transform = 'scale(2.5)';
+        ring.style.transform = 'scale(1.4)';
+        ring.style.opacity = '0.8';
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.style.transform = 'scale(1)';
+        ring.style.transform = 'scale(1)';
+        ring.style.opacity = '0.5';
+      });
+    });
+
+    // Animated canvas background (grid + particles)
+    const canvas = document.getElementById('canvas-bg');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Particles
+    const particles = Array.from({length: 80}, () => ({
+      x: Math.random() * 2000,
+      y: Math.random() * 2000,
+      r: Math.random() * 1.5 + 0.3,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      alpha: Math.random() * 0.6 + 0.1
+    }));
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, W, H);
+
+      // Dot grid
+      ctx.fillStyle = 'rgba(0, 212, 255, 0.12)';
+      const spacing = 40;
+      for (let x = 0; x < W; x += spacing) {
+        for (let y = 0; y < H; y += spacing) {
+          ctx.beginPath();
+          ctx.arc(x, y, 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Particles
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 212, 255, ${p.alpha})`;
+        ctx.fill();
+      });
+
+      // Connect nearby particles
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(0, 212, 255, ${0.06 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(drawGrid);
+    }
+    drawGrid();
+
+    // Scroll reveal
+    const revealEls = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
